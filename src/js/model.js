@@ -5,7 +5,8 @@ export const state = {
         results: [],
         resultsPerPage: RES_PER_PAGE,
         page: 1,
-    }
+    },
+    bookmarks: []
 }
 import { API_URL, RES_PER_PAGE } from './config'
 import { getJSON } from './helper';
@@ -24,6 +25,7 @@ export const loadSearchResult = async function (query) {
                 image: recipe.image_url,
             }
         })
+        state.search.page = 1
     }
     catch (err) {
         console.error(err)
@@ -46,6 +48,9 @@ export const loadRecipe = async function (recipeID) {
             ingredients: recipe.ingredients
 
         }
+        if (state.bookmarks.some(bookmark => bookmark.id === recipeID))
+            state.recipe.bookmarked = true;
+        else state.recipe.bookmarked = false
     }
     catch (err) {
         throw err
@@ -67,4 +72,16 @@ export const updateServing = function (newServings) {
     });
 
     state.recipe.servings = newServings
+}
+export const addBookMark = function (recipe) {
+    // Add bookmark
+    state.bookmarks.push(recipe)
+    //mark current recipe
+    if (recipe.id === state.recipe.id) state.recipe.bookmarked = true
+}
+export const deleteBookMark = function (recipeID) {
+    const index = state.bookmarks.findIndex(el => el.id === recipeID)
+    state.bookmarks.splice(index, 1)
+
+    if (recipeID == state.recipe.id) state.recipe.bookmarked = false
 }

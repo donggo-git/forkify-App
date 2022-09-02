@@ -10,12 +10,15 @@ if (module.hot) {
 
 
 
-const controlRecipes = async function () {
+const controlRecipe = async function () {
 
   try {
     const recipeID = window.location.hash.slice(1);
-    recipeView.renderSpinner()
     if (recipeID === '') return
+    recipeView.renderSpinner()
+
+    //0) Update results view to mark selected search result
+    resultView.update(model.getSearchResultsPage())
     //console.log(recipeID)
     //1) loading recipe
     await model.loadRecipe(recipeID)
@@ -62,15 +65,24 @@ const controlPagination = function (goToPage) {
 const controlServing = function (newServings) {
   //update the recipe serving (in state)
   model.updateServing(newServings);
-  recipeView.render(model.state.recipe)
-  //update the recipe view
 
+  //update the recipe view
+  recipeView.update(model.state.recipe)
+}
+
+const controlAddBookmark = function () {
+  if (!model.state.recipe.bookmarked) model.addBookMark(model.state.recipe)
+  else model.deleteBookmark(model.state.recipe)
+
+  recipeView.update(model.state.recipe)
 }
 
 const init = function () {
-  recipeView.addHandlerRender(controlRecipes)
+  recipeView.addHandlerRender(controlRecipe)
   recipeView.addHandlerUpdateServing(controlServing)
   searchView.addHandlerSearch(controlSearchResults)
   paginationView.addHandlerClick(controlPagination)
+  recipeView.addHandlerAddBookmark(controlAddBookmark)
 }
+
 init()

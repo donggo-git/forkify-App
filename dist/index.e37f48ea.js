@@ -543,11 +543,13 @@ var _resultViewDefault = parcelHelpers.interopDefault(_resultView);
 var _paginationView = require("./views/paginationView");
 var _paginationViewDefault = parcelHelpers.interopDefault(_paginationView);
 if (module.hot) module.hot.accept();
-const controlRecipes = async function() {
+const controlRecipe = async function() {
     try {
         const recipeID = window.location.hash.slice(1);
-        (0, _recipeViewDefault.default).renderSpinner();
         if (recipeID === "") return;
+        (0, _recipeViewDefault.default).renderSpinner();
+        //0) Update results view to mark selected search result
+        (0, _resultViewDefault.default).update(_model.getSearchResultsPage());
         //console.log(recipeID)
         //1) loading recipe
         await _model.loadRecipe(recipeID);
@@ -586,14 +588,20 @@ const controlPagination = function(goToPage) {
 const controlServing = function(newServings) {
     //update the recipe serving (in state)
     _model.updateServing(newServings);
-    (0, _recipeViewDefault.default).render(_model.state.recipe);
-//update the recipe view
+    //update the recipe view
+    (0, _recipeViewDefault.default).update(_model.state.recipe);
+};
+const controlAddBookmark = function() {
+    if (!_model.state.recipe.bookmarked) _model.addBookMark(_model.state.recipe);
+    else _model.deleteBookmark(_model.state.recipe);
+    (0, _recipeViewDefault.default).update(_model.state.recipe);
 };
 const init = function() {
-    (0, _recipeViewDefault.default).addHandlerRender(controlRecipes);
+    (0, _recipeViewDefault.default).addHandlerRender(controlRecipe);
     (0, _recipeViewDefault.default).addHandlerUpdateServing(controlServing);
     (0, _searchViewDefault.default).addHandlerSearch(controlSearchResults);
     (0, _paginationViewDefault.default).addHandlerClick(controlPagination);
+    (0, _recipeViewDefault.default).addHandlerAddBookmark(controlAddBookmark);
 };
 init();
 
@@ -605,6 +613,8 @@ parcelHelpers.export(exports, "loadSearchResult", ()=>loadSearchResult);
 parcelHelpers.export(exports, "loadRecipe", ()=>loadRecipe);
 parcelHelpers.export(exports, "getSearchResultsPage", ()=>getSearchResultsPage);
 parcelHelpers.export(exports, "updateServing", ()=>updateServing);
+parcelHelpers.export(exports, "addBookMark", ()=>addBookMark);
+parcelHelpers.export(exports, "deleteBookMark", ()=>deleteBookMark);
 var _config = require("./config");
 var _helper = require("./helper");
 const state = {
@@ -614,7 +624,8 @@ const state = {
         results: [],
         resultsPerPage: (0, _config.RES_PER_PAGE),
         page: 1
-    }
+    },
+    bookmarks: []
 };
 const loadSearchResult = async function(query) {
     try {
@@ -628,6 +639,7 @@ const loadSearchResult = async function(query) {
                 image: recipe.image_url
             };
         });
+        state.search.page = 1;
     } catch (err) {
         console.error(err);
         throw err;
@@ -647,6 +659,8 @@ const loadRecipe = async function(recipeID) {
             cookingTime: recipe.cooking_time,
             ingredients: recipe.ingredients
         };
+        if (state.bookmarks.some((bookmark)=>bookmark.id === recipeID)) state.recipe.bookmarked = true;
+        else state.recipe.bookmarked = false;
     } catch (err) {
         throw err;
     }
@@ -662,6 +676,17 @@ const updateServing = function(newServings) {
         ing.quantity = ing.quantity * newServings / state.recipe.servings;
     });
     state.recipe.servings = newServings;
+};
+const addBookMark = function(recipe) {
+    // Add bookmark
+    state.bookmarks.push(recipe);
+    //mark current recipe
+    if (recipe.id === state.recipe.id) state.recipe.bookmarked = true;
+};
+const deleteBookMark = function(recipeID) {
+    const index = state.bookmarks.findIndex((el)=>el.id === recipeID);
+    state.bookmarks.splice(index, 1);
+    if (recipeID == state.recipe.id) state.recipe.bookmarked = false;
 };
 
 },{"./config":"k5Hzs","./helper":"lVRAz","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"k5Hzs":[function(require,module,exports) {
@@ -758,10 +783,16 @@ class recipeView extends (0, _viewDefault.default) {
             if (updateTo > 0) handler(updateTo);
         });
     }
+    addHandlerAddBookmark(handler) {
+        this._parentElement.addEventListener("click", function(e) {
+            const btn = e.target.closest(".btn--bookmark");
+            if (!btn) return;
+            handler();
+        });
+    }
     _generateMarkup() {
-        console.log(this._data);
+        //console.log(this._data)
         return `
-
         <figure class="recipe__fig">
           <img src="${this._data.image}" alt="${this._data.title}" class="recipe__img" />
           <h1 class="recipe__title">
@@ -798,9 +829,9 @@ class recipeView extends (0, _viewDefault.default) {
             </div>
           </div>
         
-          <button class="btn--round">
+          <button class="btn--round btn--bookmark">
             <svg class="">
-              <use href="${0, _iconsSvgDefault.default}#icon-bookmark-fill"></use>
+              <use href="${0, _iconsSvgDefault.default}#icon-bookmark${this.data.bookmark ? "-fill" : ""}"></use>
             </svg>
           </button>
         </div>
@@ -893,11 +924,30 @@ class View {
     _errorMessage = "We couldn't find that recipe. Please try another one!";
     _successMessage = "";
     render(data) {
-        if (!data || Array.isArray(data) && data.length === 0) return this.renderError;
+        if (!data || Array.isArray(data) && data.length === 0) return this.renderError();
         this._data = data;
-        this._clear();
         const markup = this._generateMarkup();
+        console.log(markup);
+        this._clear();
         this._parentElement.insertAdjacentHTML("afterbegin", markup);
+    //////
+    }
+    update(data) {
+        /*if (!data || (Array.isArray(data) && data.length === 0)) {
+      return this.renderError()
+    }
+*/ this._data = data;
+        const newMarkup = this._generateMarkup();
+        const newDOM = document.createRange().createContextualFragment(newMarkup);
+        const newElement = Array.from(newDOM.querySelectorAll("*"));
+        const curElement = Array.from(this._parentElement.querySelectorAll("*"));
+        newElement.forEach((newEl, i)=>{
+            const curEl = curElement[i];
+            //update change TEXT
+            if (!newEl.isEqualNode(curEl) && newEl.firstChild.nodeValue.trim() !== "") curEl.textContent = newEl.textContent;
+            //update change ATTRIBUTE
+            if (!newEl.isEqualNode(curEl)) Array.from(newEl.attributes).forEach((attr)=>curEl.setAttribute(attr.name, attr.value));
+        });
     }
     _clear() {
         this._parentElement.innerHTML = "";
@@ -1228,9 +1278,10 @@ class resultView extends (0, _viewDefault.default) {
         return this._data.map((result)=>this._generateMarkupPreview(result)).join("");
     }
     _generateMarkupPreview(result) {
+        const id = window.location.hash.slice(1);
         return `
         <li class="preview">
-        <a class="preview__link" href="#${result.id}">
+        <a class="preview__link ${result.id === id ? "preview__link--active" : ""}" href="#${result.id}">
           <figure class="preview__fig">
             <img src="${result.image}" alt="${result.title}" />
           </figure>

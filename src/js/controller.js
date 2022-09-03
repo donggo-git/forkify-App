@@ -3,6 +3,7 @@ import recipeView from './views/recipeView';
 import searchView from './views/searchView';
 import resultView from './views/resultView';
 import paginationView from './views/paginationView';
+import bookmarksView from './views/bookmarksView';
 
 if (module.hot) {
   module.hot.accept();
@@ -71,10 +72,13 @@ const controlServing = function (newServings) {
 }
 
 const controlAddBookmark = function () {
+  //1) add/remove bookmarks
   if (!model.state.recipe.bookmarked) model.addBookMark(model.state.recipe)
   else model.deleteBookmark(model.state.recipe)
-
+  //2) Update recipe view
   recipeView.update(model.state.recipe)
+  //3) Render bookmark
+  bookmarksView.render(model.state.bookmarks)
 }
 
 const init = function () {

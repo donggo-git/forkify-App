@@ -5,7 +5,7 @@ export default class View {
   _errorMessage = "We couldn't find that recipe. Please try another one!"
   _successMessage = ''
 
-  render(data) {
+  render(data, render = true) {
     if (!data || (Array.isArray(data) && data.length === 0)) {
       return this.renderError();
     }
@@ -14,6 +14,8 @@ export default class View {
 
 
     const markup = this._generateMarkup();
+    if (!render) return markup
+
     console.log(markup)
     this._clear();
     this._parentElement.insertAdjacentHTML('afterbegin', markup)

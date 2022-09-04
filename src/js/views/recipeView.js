@@ -72,7 +72,7 @@ class recipeView extends View {
         
           <button class="btn--round btn--bookmark">
             <svg class="">
-              <use href="${icons}#icon-bookmark${this.data.bookmark ? '-fill' : ''}"></use>
+              <use href="${icons}#icon-bookmark${this._data.bookmark ? '-fill' : ''}"></use>
             </svg>
           </button>
         </div>
@@ -111,8 +111,7 @@ class recipeView extends View {
         <svg class="recipe__icon">
           <use href="${icons}#icon-check"></use>
         </svg>
-        <div class="recipe__quantity">${ing.quantity ?
-        new Fractional(ing.quantity).toString() : ''
+        <div class="recipe__quantity">${ing.quantity ? ing.quantity : ''
       }</div>
         <div class="recipe__description">
           <span class="recipe__unit">${ing.unit}</span>

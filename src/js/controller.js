@@ -12,27 +12,27 @@ if (module.hot) {
 
 
 const controlRecipe = async function () {
+  //debugger
+  ///try {
+  const recipeID = window.location.hash.slice(1);
+  if (recipeID === '') return
+  recipeView.renderSpinner()
 
-  try {
-    const recipeID = window.location.hash.slice(1);
-    if (recipeID === '') return
-    recipeView.renderSpinner()
+  //0) Update results view to mark selected search result
+  resultView.update(model.getSearchResultsPage())
+  //console.log(recipeID)
+  //1) loading recipe
+  await model.loadRecipe(recipeID)
+  //console.log(model.state.recipe)
+  //console.log(recipeView)
+  //console.log(resultView)
+  //2) rendering recipe
 
-    //0) Update results view to mark selected search result
-    resultView.update(model.getSearchResultsPage())
-    //console.log(recipeID)
-    //1) loading recipe
-    await model.loadRecipe(recipeID)
-    //console.log(model.state.recipe)
-    //console.log(recipeView)
-    //console.log(resultView)
-    //2) rendering recipe
-
-    recipeView.render(model.state.recipe)
-  }
-  catch (err) {
+  recipeView.render(model.state.recipe)
+  //}
+  /**catch (err) {
     recipeView.renderError("We couldn't find your recipe")
-  }
+  }*/
 }
 
 
@@ -74,14 +74,20 @@ const controlServing = function (newServings) {
 const controlAddBookmark = function () {
   //1) add/remove bookmarks
   if (!model.state.recipe.bookmarked) model.addBookMark(model.state.recipe)
-  else model.deleteBookmark(model.state.recipe)
+  else model.deleteBookMark(model.state.recipe)
   //2) Update recipe view
   recipeView.update(model.state.recipe)
   //3) Render bookmark
   bookmarksView.render(model.state.bookmarks)
 }
 
+const controlBookmark = function () {
+  bookmarksView.render(model.state.bookmarks)
+}
+
+
 const init = function () {
+  bookmarksView.addHandlerRender(controlBookmark)
   recipeView.addHandlerRender(controlRecipe)
   recipeView.addHandlerUpdateServing(controlServing)
   searchView.addHandlerSearch(controlSearchResults)

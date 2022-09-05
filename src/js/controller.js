@@ -4,6 +4,7 @@ import searchView from './views/searchView';
 import resultView from './views/resultView';
 import paginationView from './views/paginationView';
 import bookmarksView from './views/bookmarksView';
+import addRecipeView from './views/addRecipeView';
 
 if (module.hot) {
   module.hot.accept();
@@ -85,6 +86,9 @@ const controlBookmark = function () {
   bookmarksView.render(model.state.bookmarks)
 }
 
+const controlAddRecipe = function () {
+
+}
 
 const init = function () {
   bookmarksView.addHandlerRender(controlBookmark)
@@ -93,6 +97,7 @@ const init = function () {
   searchView.addHandlerSearch(controlSearchResults)
   paginationView.addHandlerClick(controlPagination)
   recipeView.addHandlerAddBookmark(controlAddBookmark)
+  addRecipeView.addHandlerUpload(controlAddRecipe)
 }
 
 init()

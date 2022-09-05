@@ -544,6 +544,8 @@ var _paginationView = require("./views/paginationView");
 var _paginationViewDefault = parcelHelpers.interopDefault(_paginationView);
 var _bookmarksView = require("./views/bookmarksView");
 var _bookmarksViewDefault = parcelHelpers.interopDefault(_bookmarksView);
+var _addRecipeView = require("./views/addRecipeView");
+var _addRecipeViewDefault = parcelHelpers.interopDefault(_addRecipeView);
 if (module.hot) module.hot.accept();
 const controlRecipe = async function() {
     //debugger
@@ -606,6 +608,7 @@ const controlAddBookmark = function() {
 const controlBookmark = function() {
     (0, _bookmarksViewDefault.default).render(_model.state.bookmarks);
 };
+const controlAddRecipe = function() {};
 const init = function() {
     (0, _bookmarksViewDefault.default).addHandlerRender(controlBookmark);
     (0, _recipeViewDefault.default).addHandlerRender(controlRecipe);
@@ -613,10 +616,11 @@ const init = function() {
     (0, _searchViewDefault.default).addHandlerSearch(controlSearchResults);
     (0, _paginationViewDefault.default).addHandlerClick(controlPagination);
     (0, _recipeViewDefault.default).addHandlerAddBookmark(controlAddBookmark);
+    (0, _addRecipeViewDefault.default).addHandlerUpload(controlAddRecipe);
 };
 init();
 
-},{"./model":"Y4A21","./views/recipeView":"l60JC","./views/searchView":"9OQAM","./views/resultView":"f70O5","./views/paginationView":"6z7bi","./views/bookmarksView":"4Lqzq","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"Y4A21":[function(require,module,exports) {
+},{"./model":"Y4A21","./views/recipeView":"l60JC","./views/searchView":"9OQAM","./views/resultView":"f70O5","./views/paginationView":"6z7bi","./views/bookmarksView":"4Lqzq","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3","./views/addRecipeView":"i6DNj"}],"Y4A21":[function(require,module,exports) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "state", ()=>state);
@@ -1414,6 +1418,49 @@ class bookmarksView extends (0, _viewDefault.default) {
 }
 exports.default = new bookmarksView();
 
-},{"./View":"5cUXS","./previewView":"1FDQ6","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["fA0o9","aenu9"], "aenu9", "parcelRequire3a11")
+},{"./View":"5cUXS","./previewView":"1FDQ6","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"i6DNj":[function(require,module,exports) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+var _view = require("./View");
+var _viewDefault = parcelHelpers.interopDefault(_view);
+var _iconsSvg = require("url:../../img/icons.svg");
+var _iconsSvgDefault = parcelHelpers.interopDefault(_iconsSvg);
+class addRecipeView extends (0, _viewDefault.default) {
+    _parentElement = document.querySelector(".upload");
+    _window = document.querySelector(".add-recipe-window");
+    _overlay = document.querySelector(".overlay");
+    _btnOpen = document.querySelector(".nav__btn--add-recipe");
+    _btnClose = document.querySelector(".btn--close-modal");
+    constructor(){
+        super();
+        this._addHandlerShowWindow();
+        this._addHandlerHiddenWindow();
+    }
+    toggleWindow() {
+        this._overlay.classList.toggle("hidden");
+        this._window.classList.toggle("hidden");
+    }
+    _addHandlerShowWindow() {
+        this._btnOpen.addEventListener("click", this.toggleWindow.bind(this));
+    }
+    _addHandlerHiddenWindow() {
+        this._btnClose.addEventListener("click", this.toggleWindow.bind(this));
+        this._overlay.addEventListener("click", this.toggleWindow.bind(this));
+    }
+    _addHandlerUpload(handler) {
+        this._parentElement.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const dataArr = [
+                ...new FormData(this)
+            ];
+            const data = Object.entries(dataArr);
+            handler(data);
+        });
+    }
+    _generateMarkup() {}
+}
+exports.default = new addRecipeView();
+
+},{"./View":"5cUXS","url:../../img/icons.svg":"loVOp","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}]},["fA0o9","aenu9"], "aenu9", "parcelRequire3a11")
 
 //# sourceMappingURL=index.e37f48ea.js.map

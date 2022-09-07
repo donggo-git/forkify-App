@@ -9,7 +9,7 @@ export const state = {
     bookmarks: []
 }
 import { API_URL, RES_PER_PAGE } from './config'
-import { getJSON } from './helper';
+import { getJSON, sendJSON } from './helper';
 
 export const loadSearchResult = async function (query) {
     try {
@@ -33,21 +33,28 @@ export const loadSearchResult = async function (query) {
     }
 }
 
+const createRecipeObject = function (data) {
+    const { recipe } = data?.data;
+    return {
+        id: recipe.id,
+        title: recipe.title,
+        publisher: recipe.publisher,
+        sourceUrl: recipe.sourceurl,
+        image: recipe.image_url,
+        servings: recipe.servings,
+        cookingTime: recipe.cooking_time,
+        ingredients: recipe.ingredients,
+        ...(recipe.key && { key: recipe.key })
+
+    }
+}
+
 export const loadRecipe = async function (recipeID) {
     try {
         const data = await getJSON(`https://forkify-api.herokuapp.com/api/v2/recipes/${recipeID}`)
-        const { recipe } = data?.data;
-        state.recipe = {
-            id: recipe.id,
-            title: recipe.title,
-            publisher: recipe.publisher,
-            sourceUrl: recipe.sourceurl,
-            image: recipe.image_url,
-            servings: recipe.servings,
-            cookingTime: recipe.cooking_time,
-            ingredients: recipe.ingredients
+        state.recipe = createRecipeObject(data)
 
-        }
+
         if (state.bookmarks.some(bookmark => bookmark.id === recipeID))
             state.recipe.bookmarked = true;
         else state.recipe.bookmarked = false
@@ -98,3 +105,32 @@ const init = function () {
     if (storage) state.bookmarks = JSON.parse(storage)
 }
 init()
+
+export const uploadRecipe = async function (newRecipe) {
+    try {
+        const ingredients = Object.entries(newRecipe).filter(
+            entry => entry[0].startsWith('ingredient') && entry[1] !== ""
+        ).map(ing => {
+            const ingArr = ing.replaceAll(" ", '').split(',')
+            if (ingArr.length !== 3) {
+                throw new Error('Wrong ingredients format, please use the correct format')
+            }
+            return { quantity: quantity ? +quantity : null, unit, description }
+        })
+        const recipe = {
+            title: newRecipe.title,
+            source_url: newRecipe.sourceUrl,
+            publisher: newRecipe.publisher,
+            cooking_time: +newRecipe.cookingTime,
+            serving: +newRecipe.serving,
+            ingredients,
+        }
+        const data = await sendJSON(`${API_URL}?key=SOMEKEY`, recipe)
+        state.recipe = createRecipeObject(data)
+        addBookMark(state.recipe)
+    } catch (err) {
+        throw err
+    }
+
+
+}

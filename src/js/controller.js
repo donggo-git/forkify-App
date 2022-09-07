@@ -5,6 +5,7 @@ import resultView from './views/resultView';
 import paginationView from './views/paginationView';
 import bookmarksView from './views/bookmarksView';
 import addRecipeView from './views/addRecipeView';
+import { MODAL_CLOSE_SEC } from './config';
 
 if (module.hot) {
   module.hot.accept();
@@ -82,12 +83,36 @@ const controlAddBookmark = function () {
   bookmarksView.render(model.state.bookmarks)
 }
 
-const controlBookmark = function () {
-  bookmarksView.render(model.state.bookmarks)
+const controlBookmark = async function () {
+  try {
+    await bookmarksView.render(model.state.bookmarks)
+  }
+  catch (err) {
+    console.error(err);
+    addRecipeView.renderError(err)
+  }
 }
 
-const controlAddRecipe = function () {
+const controlAddRecipe = async function (newRecipe) {
+  try {
+    //Show loading spinner
+    addRecipeView.renderSpinner()
 
+    //Upload the recipe
+    await model.uploadRecipe(newRecipe)
+    //render recipe
+    recipeView.render(model.state.recipe)
+    //success message
+    addRecipeView.renderMessage()
+
+    //close form window
+    setTimeout(function () {
+      addRecipeView.toggleWindow()
+    }, MODAL_CLOSE_SEC * 1000)
+  }
+  catch (err) {
+    console.error(err)
+  }
 }
 
 const init = function () {

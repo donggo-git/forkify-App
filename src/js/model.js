@@ -9,13 +9,13 @@ export const state = {
     bookmarks: []
 }
 import { API_URL, RES_PER_PAGE } from './config'
-import { getJSON, sendJSON } from './helper';
+import { AJAX } from './helper';
 
 export const loadSearchResult = async function (query) {
     try {
         state.search.query = query
 
-        const data = await getJSON(`${API_URL}?search=${query}`)
+        const data = await AJAX(`${API_URL}?search=${query}`)
 
         state.search.results = data.data.recipes.map(recipe => {
             return {
@@ -23,6 +23,7 @@ export const loadSearchResult = async function (query) {
                 title: recipe.title,
                 publisher: recipe.publisher,
                 image: recipe.image_url,
+                ...(recipe.key && { key: recipe.key })
             }
         })
         state.search.page = 1
@@ -51,7 +52,7 @@ const createRecipeObject = function (data) {
 
 export const loadRecipe = async function (recipeID) {
     try {
-        const data = await getJSON(`https://forkify-api.herokuapp.com/api/v2/recipes/${recipeID}`)
+        const data = await AJAX(`https://forkify-api.herokuapp.com/api/v2/recipes/${recipeID}`)
         state.recipe = createRecipeObject(data)
 
 
@@ -125,7 +126,7 @@ export const uploadRecipe = async function (newRecipe) {
             serving: +newRecipe.serving,
             ingredients,
         }
-        const data = await sendJSON(`${API_URL}?key=SOMEKEY`, recipe)
+        const data = await AJAX(`${API_URL}?key=SOMEKEY`, recipe)
         state.recipe = createRecipeObject(data)
         addBookMark(state.recipe)
     } catch (err) {
